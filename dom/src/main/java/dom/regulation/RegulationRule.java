@@ -227,7 +227,7 @@ public class RegulationRule implements Comparable<RegulationRule> {
     @Action(semantics=SemanticsOf.NON_IDEMPOTENT)
    public String testRestClient() {
     	 // public ToDoItem updateCost(
-    	String returnValue= restClientTest.getTest() ;
+    	String returnValue= restClientTest.restClient() ;
         setShowRestTest(returnValue);
     	return returnValue; 
     	}
