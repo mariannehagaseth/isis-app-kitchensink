@@ -30,9 +30,12 @@ public interface Categorized {
 //  ToDoItem.Subcategory getSubcategory();
 //  void setSubcategory(ToDoItem.Subcategory subcategory);
 
-    Regulation.KPI getKpi();
-    void setKpi(Regulation.KPI kpi);
+   // Regulation.KPI getKpi();
+    //void setKpi(Regulation.KPI kpi);
 
-    Regulation.RegulationType getRegulationType();
-    void setRegulationType(Regulation.RegulationType regulationType);
+  //  Regulation.RegulationType getRegulationType();
+   // void setRegulationType(Regulation.RegulationType regulationType);
+
+
+
 }

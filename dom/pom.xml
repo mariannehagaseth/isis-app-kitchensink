@@ -33,6 +33,12 @@ language governing permissions and limitations under the License.
             </resource>
             <resource>
                 <directory>generated</directory>
+                <includes>
+                    <include>**</include>
+                </includes>
+                <excludes>
+                    <exclude>**/*.java</exclude>
+                </excludes>
             </resource>
             <resource>
                 <directory>src/main/java</directory>

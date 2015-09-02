@@ -1,5 +1,8 @@
 package dom.regulation;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
@@ -16,8 +19,11 @@ import javax.ws.rs.core.Response;
 import org.apache.isis.applib.AbstractService;
 import org.apache.isis.applib.annotation.Action;
 import org.apache.isis.applib.annotation.DomainService;
+import org.apache.isis.applib.annotation.Programmatic;
+import org.apache.isis.applib.query.QueryDefault;
 
 import xml.skos.MySKOSConcept;
+import xml.skos.SKOSConceptProperty;
 
 @DomainService
 public class RESTclientTest extends AbstractService   {
@@ -49,8 +55,11 @@ public class RESTclientTest extends AbstractService   {
 
 	@Override
 	public void completed(Response response) {
-	System.out.println("Response status code "
-	+ response.getStatus() + " received.");
+		//Called when the invocation was successfully completed. Note that this does not necessarily mean the response has bean fully read, which depends on the parameterized invocation callback response type.
+		//Once this invocation callback method returns, the underlying Response instance will be automatically closed by the runtime.
+		//Parameters:
+		//response - response data.
+		System.out.println("Response status code " + response.getStatus() + " received.");
 	final MySKOSConcept skosConceptOccurrence = response.readEntity(MySKOSConcept.class);
 	System.out.print("skosConceptOccurrence.toString()= ");
 	System.out.println(skosConceptOccurrence.toString());
@@ -58,7 +67,7 @@ public class RESTclientTest extends AbstractService   {
 	System.out.println("skosBegin = "+skosBegin);
 		String skosText=skosConceptOccurrence.getText();
 		System.out.println("skosText = "+skosText);
-	}
+ 	}
 
 	@Override
 	public void failed(Throwable throwable) {
@@ -88,6 +97,62 @@ public class RESTclientTest extends AbstractService   {
 	}
 
 
+@Programmatic
+// Lager denne for å teste henting av Ship  Class
+public MySKOSConcept fetchSKOSconcept(){
+
+
+
+	class SKOSFreetextCallback implements InvocationCallback<Response> {
+
+		MySKOSConcept skosConceptOccurrence;
+
+		@Override
+		public void completed(Response response) {
+			System.out.println("Response status code "
+					+ response.getStatus() + " received.");
+			skosConceptOccurrence = response.readEntity(MySKOSConcept.class);
+			System.out.print("skosConceptOccurrence.toString()= ");
+			System.out.println(skosConceptOccurrence.toString());
+			int skosBegin=skosConceptOccurrence.getBegin();
+			System.out.println("skosBegin = "+skosBegin);
+			String skosText=skosConceptOccurrence.getText();
+			System.out.println("skosText = "+skosText);
+			SKOSConceptProperty skosConceptProperty=skosConceptOccurrence.getSkosConceptProperty();
+			System.out.println("skosConceptProperty = "+skosConceptProperty.value());
+		}
+
+		@Override
+		public void failed(Throwable throwable) {
+			System.out.println("Invocation failed.");
+			throwable.printStackTrace();
+		}
+	}
+
+	System.out.println("-------------------\nFreetext async POST Request Test");	Client client = ClientBuilder.newClient();
+	WebTarget webTarget = client.target("http://192.168.33.10:9000/skos/freetext");
+	Invocation.Builder invocationBuilder = webTarget.request(MediaType.APPLICATION_XML);
+	invocationBuilder.header("Content-type", "text/plain");
+	// AsyncInvoker async_invoker = invocationBuilder.async().get(sftc);
+	AsyncInvoker async_invoker = invocationBuilder.async();
+	InvocationCallback<Response> sftc = new SKOSFreetextCallback();
+	Future<Response> response = async_invoker.post(Entity.entity("A string entity to be POSTed", MediaType.TEXT_PLAIN), sftc);
+	String responseGot="";
+	System.out.println("responseGot is blank");
+
+	try {
+		System.out.println("responseGot=response.get().toString();");
+		responseGot=response.get().toString();
+	} catch (InterruptedException e) {
+		e.printStackTrace();
+	} catch (ExecutionException e) {
+		e.printStackTrace();
+	}
+
+	System.out.println("response.get().toString()= " + responseGot);
+	System.out.println("return skosConceptOccurrence");
+	return null;
+}
 
 	@Action
 	 public void SkosUriRequest() {
@@ -160,5 +225,26 @@ public class RESTclientTest extends AbstractService   {
 
 		
 	}
- 
+
+
+	@Programmatic
+	public Set<RegulationText> findSimilarRegulations(RegulationText regulation){
+		//search regulations similar to regulation:
+		// Dummy fetch all regulations except the one given:
+		List<RegulationText> regList= (List<RegulationText>) allMatches(new QueryDefault(RegulationText.class, "findRegulations"));
+		if(regList.isEmpty()) {
+				warnUser("No regulations found.");
+			}else {regList.remove(regulation);}
+
+		Set<RegulationText> regSet = null;
+		try {
+			regSet = new HashSet<RegulationText>(regList);
+		} catch (Exception e) {
+			System.out.print("No similar regulations found!!");
+			e.printStackTrace();
+		}
+
+		return regSet;
+		}
+		//endregion
 }
